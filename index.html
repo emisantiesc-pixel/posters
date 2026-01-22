@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>P O S T E R S XL - ARCADE EDITION</title>
+    <style>
+        /* FUENTE PIXEL ART */
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+        :root { 
+            --g: #39ff14; --p: #ff00ff; --b: #00ffff; --bg: #0d0221; 
+            --r: #ff0033; --y: #ffff00; --crt-glow: rgba(18, 16, 16, 0.1);
+        }
+        
+        @keyframes flicker {
+            0% { opacity: 0.97; } 5% { opacity: 0.95; } 10% { opacity: 0.9; } 
+            15% { opacity: 0.95; } 20% { opacity: 0.98; } 100% { opacity: 1; }
+        }
+        @keyframes scanline { 0% { top: 0%; } 100% { top: 100%; } }
+        @keyframes shake { 0% { transform: translate(2px, 2px); } 20% { transform: translate(-3px, 0px); } 100% { transform: translate(0px, 0px); } }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+
+        body { 
+            margin: 0; 
+            background: #000; 
+            color: #fff; 
+            font-family: 'Press Start 2P', cursive; /* Fuente Arcade */
+            height: 100vh; 
+            overflow: hidden; 
+            display: flex; 
+            flex-direction: column; 
+            position: relative;
+        }
+
+        /* EFECTO TUBO CRT Y SCANLINES */
+        body::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 100;
+            background-size: 100% 3px, 3px 100%;
+            pointer-events: none;
+        }
+
+        /* LÍNEA DE ESCANEO QUE BAJA */
+        body::after {
+            content: " ";
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100px;
+            background: linear-gradient(0deg, rgba(0,0,0,0) 0%, rgba(255,255,255,0.05) 50%, rgba(0,0,0,0) 100%);
+            opacity: 0.1;
+            z-index: 101;
+            animation: scanline 8s linear infinite;
+            pointer-events: none;
+        }
+
+        .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            animation: flicker 0.15s infinite;
+            z-index: 5;
+        }
+
+        .p { display: none; width: 100%; max-width: 500px; flex-direction: column; align-items: center; }
+        .v { display: flex !important; }
+
+        h1 { 
+            color: #fff; 
+            text-shadow: 4px 4px 0 var(--p), -4px -4px 0 var(--b); 
+            font-size: 1.8rem; 
+            margin-bottom: 20px; 
+            text-align: center;
+            line-height: 1.5;
+        }
+
+        #txt { 
+            color: var(--y); 
+            font-size: 1rem; 
+            margin: 20px 0; 
+            min-height: 80px; 
+            line-height: 1.6; 
+            text-align: center;
+            text-transform: uppercase;
+        }
+        
+        .hud { 
+            width: 100%; 
+            display: flex; 
+            justify-content: space-between; 
+            color: var(--g); 
+            margin-bottom: 20px; 
+            font-size: 0.8rem; 
+            padding: 10px; 
+            border: 3px solid var(--g);
+            background: rgba(0, 255, 0, 0.1);
+            box-shadow: inset 0 0 10px var(--g);
+        }
+        
+        .btn { 
+            width: 100%; 
+            padding: 15px; 
+            margin: 8px 0; 
+            background: #000; 
+            border: 3px solid #fff; 
+            color: #fff; 
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.7rem; 
+            text-transform: uppercase; 
+            cursor: pointer; 
+            position: relative;
+            box-shadow: 4px 4px 0 #444;
+            transition: 0.1s;
+        }
+
+        .btn:active { transform: translate(2px, 2px); box-shadow: none; background: #fff; color: #000; }
+        
+        /* BOTONES DE OPCIONES CON COLOR */
+        .opt-btn { border-color: var(--b); color: var(--b); box-shadow: 4px 4px 0 #005a5a; }
+        .opt-btn:active { background: var(--b); color: #000; }
+
+        /* MODAL ARCADE */
+        #modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 200;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .modal-content {
+            border: 6px double #fff;
+            background: #000;
+            padding: 25px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(255,255,255,0.2);
+        }
+        .modal-title { font-size: 1.2rem; color: var(--r); margin-bottom: 20px; animation: pulse 0.5s infinite; }
+        .modal-msg { font-size: 0.7rem; color: #fff; margin-bottom: 25px; line-height: 1.8; }
+        
+        #premio-tag { 
+            font-size: 1.2rem; 
+            margin: 20px 0; 
+            display: block; 
+            background: #fff;
+            color: #000;
+            padding: 10px;
+        }
+
+        .shake { animation: shake 0.2s ease-in-out; }
+        .sub { color: var(--p); font-size: 0.7rem; animation: pulse 1s infinite; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <div id="modal">
+        <div class="modal-content">
+            <div class="modal-title" id="mTitle">MESSAGE</div>
+            <div id="mMsg" class="modal-msg"></div>
+            <div id="premio-area"></div>
+            <div class="btn" id="mBtn" style="border-color:var(--g); color:var(--g); box-shadow: 4px 4px 0 #1a4d10;">INSERT COIN</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div id="p1" class="p v">
+            <h1>POSTERS<br>TRIVIA XL</h1>
+            <p class="sub">PRESS START TO PLAY</p>
+            <div class="btn" onclick="start()" style="margin-top:40px; border-color:var(--y); color:var(--y); box-shadow: 5px 5px 0 #666600;"> START GAME </div>
+        </div>
+
+        <div id="p2" class="p">
+            <div class="hud">
+                <span>SCORE:<span id="s">00</span></span>
+                <span style="color:var(--r)">VIDAS:<span id="l"></span></span>
+            </div>
+            <div id="txt">WAITING...</div>
+            <div id="opts" style="width:100%;"></div>
+        </div>
+    </div>
+
+    <script>
+        var score = 0, vidas = 2, mazo = [];
+        
+        // El banco de preguntas se mantiene igual
+        const banco = [
+            {q:"¿Qué baterista de Def Leppard toca con un solo brazo?", a:"Rick Allen", o:["Rick Allen","Lars Ulrich","Nicko McBrain","Phil Collins"]},
+            {q:"¿Qué banda de metal lanzó el disco 'St. Anger'?", a:"Metallica", o:["Metallica","Megadeth","Slayer","Anthrax"]},
+            {q:"¿Quién es el cantante principal de la banda Ghost?", a:"Tobias Forge", o:["Tobias Forge","Bruce Dickinson","Ozzy Osbourne","King Diamond"]},
+            {q:"¿En qué año murió Kurt Cobain?", a:"1994", o:["1992","1994","1996","1990"]},
+            {q:"¿De qué país es la banda Sepultura?", a:"Brasil", o:["Brasil","España","México","Argentina"]},
+            {q:"¿Quién es el bajista y líder de Iron Maiden?", a:"Steve Harris", o:["Steve Harris","Geezer Butler","Cliff Burton","Lemmy"]},
+            {q:"¿Quién canta 'Total Eclipse of the Heart'?", a:"Bonnie Tyler", o:["Bonnie Tyler","Madonna","Tina Turner","Cher"]},
+            {q:"¿Qué banda lanzó 'Dookie' en 1994?", a:"Green Day", o:["Green Day","The Offspring","Blink-182","Sum 41"]},
+            {q:"¿Quién es el guitarrista icónico de AC/DC?", a:"Angus Young", o:["Angus Young","Malcolm Young","Brian May","Slash"]},
+            {q:"¿Qué banda de metal progresivo lanzó 'Lateralus'?", a:"Tool", o:["Tool","Dream Theater","Opeth","Mastodon"]},
+            {q:"¿A qué banda pertenecía Chester Bennington?", a:"Linkin Park", o:["Linkin Park","Korn","Limp Bizkit","Evanescence"]},
+            {q:"¿Quién es el guitarrista de Led Zeppelin?", a:"Jimmy Page", o:["Jimmy Page","Eric Clapton","Jeff Beck","Ritchie Blackmore"]},
+            {q:"¿Qué artista pop lanzó 'Future Nostalgia'?", a:"Dua Lipa", o:["Dua Lipa","Katy Perry","Taylor Swift","Billie Eilish"]},
+            {q:"¿Quién es el guitarrista de Queen?", a:"Brian May", o:["Brian May","John Deacon","Roger Taylor","Freddie Mercury"]},
+            {q:"¿Qué banda de metal canta 'Holy Wars'?", a:"Megadeth", o:["Megadeth","Metallica","Exodus","Testament"]},
+            {q:"¿Quién es la cantante de Evanescence?", a:"Amy Lee", o:["Amy Lee","Tarja Turunen","Sharon den Adel","Cristina Scabbia"]},
+            {q:"¿Qué banda fundó Lemmy Kilmister?", a:"Motörhead", o:["Motörhead","Black Sabbath","Hawkwind","Venom"]},
+            {q:"¿Quién es el Rey del Pop?", a:"Michael Jackson", o:["Michael Jackson","Prince","Justin Timberlake","Elton John"]},
+            {q:"¿Qué banda de Grunge lanzó 'Ten'?", a:"Pearl Jam", o:["Pearl Jam","Nirvana","Soundgarden","Alice in Chains"]},
+            {q:"¿Quién es el cantante de Guns N' Roses?", a:"Axl Rose", o:["Axl Rose","Slash","Duff McKagan","Izzy Stradlin"]},
+            {q:"¿De qué ciudad son The Beatles?", a:"Liverpool", o:["Liverpool","Londres","Manchester","Birmingham"]},
+            {q:"¿Quién canta 'Toxic'?", a:"Britney Spears", o:["Britney Spears","Christina Aguilera","Katy Perry","Madonna"]},
+            {q:"¿Qué banda de metal canta 'Du Hast'?", a:"Rammstein", o:["Rammstein","Scorpions","Accept","Helloween"]},
+            {q:"¿Quién asesinó a John Lennon?", a:"Mark Chapman", o:["Mark Chapman","Manson","Oswald","Hinckley"]},
+            {q:"¿Qué bajista de Metallica murió en 1986?", a:"Cliff Burton", o:["Cliff Burton","Jason Newsted","Robert Trujillo","Lars Ulrich"]},
+            {q:"¿Quién es el cantante de Judas Priest?", a:"Rob Halford", o:["Rob Halford","Bruce Dickinson","Dio","Biff Byford"]},
+            {q:"¿Qué banda de rock compuso 'Smoke on the Water'?", a:"Deep Purple", o:["Deep Purple","Led Zeppelin","Black Sabbath","Rainbow"]},
+            {q:"¿Quién es el vocalista de The Cure?", a:"Robert Smith", o:["Robert Smith","Morrissey","Ian Curtis","Dave Gahan"]},
+            {q:"¿Qué banda canta 'Sunday Bloody Sunday'?", a:"U2", o:["U2","The Police","The Smiths","R.E.M."]},
+            {q:"¿Quién canta 'Bohemian Rhapsody'?", a:"Freddie Mercury", o:["Freddie Mercury","David Bowie","Elton John","George Michael"]},
+            {q:"¿Qué banda lanzó 'The Wall'?", a:"Pink Floyd", o:["Pink Floyd","Genesis","Yes","King Crimson"]},
+            {q:"¿Quién es el cantante de The Rolling Stones?", a:"Mick Jagger", o:["Mick Jagger","Keith Richards","Ronnie Wood","Charlie Watts"]},
+            {q:"¿Qué artista lanzó 'Purple Rain'?", a:"Prince", o:["Prince","Michael Jackson","Stevie Wonder","Lionel Richie"]},
+            {q:"¿Quién canta 'Smells Like Teen Spirit'?", a:"Nirvana", o:["Nirvana","Pearl Jam","Alice in Chains","Mudhoney"]},
+            {q:"¿Qué banda debutó con 'Appetite for Destruction'?", a:"Guns N' Roses", o:["Guns N' Roses","Mötley Crüe","Poison","Skid Row"]},
+            {q:"¿Quién es 'El Duque Blanco'?", a:"David Bowie", o:["David Bowie","Lou Reed","Iggy Pop","Marc Bolan"]},
+            {q:"¿Qué grupo sueco ganó con 'Waterloo'?", a:"ABBA", o:["Roxette","ABBA","Ace of Base","Europe"]},
+            {q:"¿Quién es el líder de Foo Fighters?", a:"Dave Grohl", o:["Dave Grohl","Taylor Hawkins","Pat Smear","Nate Mendel"]},
+            {q:"¿Qué guitarrista usa un balde de KFC?", a:"Buckethead", o:["Buckethead","Slash","Steve Vai","Wes Borland"]},
+            {q:"¿Quién cantó en Black Sabbath 'Heaven and Hell'?", a:"Ronnie James Dio", o:["Ronnie James Dio","Ozzy Osbourne","Ian Gillan","Tony Martin"]},
+            {q:"¿En qué año murió Elvis Presley?", a:"1977", o:["1977","1975","1979","1980"]},
+            {q:"¿Festival hippie más grande de 1969?", a:"Woodstock", o:["Woodstock","Lollapalooza","Altamont","Monterey"]},
+            {q:"¿Quién es la Reina del Pop?", a:"Madonna", o:["Madonna","Whitney Houston","Cher","Britney Spears"]},
+            {q:"¿Qué banda de metal canta 'Walk'?", a:"Pantera", o:["Pantera","Sepultura","Slayer","Machine Head"]},
+            {q:"¿Quién es el guitarrista de Black Sabbath?", a:"Tony Iommi", o:["Tony Iommi","Geezer Butler","Ozzy Osbourne","Bill Ward"]},
+            {q:"¿Qué banda de glam metal lidera Dee Snider?", a:"Twisted Sister", o:["Poison","Twisted Sister","Mötley Crüe","Ratt"]},
+            {q:"¿Quién fundó Pink Floyd?", a:"Syd Barrett", o:["Syd Barrett","Roger Waters","David Gilmour","Nick Mason"]},
+            {q:"¿Qué banda punk canta 'London Calling'?", a:"The Clash", o:["The Clash","Sex Pistols","The Ramones","The Damned"]},
+            {q:"¿Qué guitarrista es 'Slowhand'?", a:"Eric Clapton", o:["Eric Clapton","Jeff Beck","Jimmy Page","Mark Knopfler"]},
+            {q:"¿Qué artista grabó 'Back to Black'?", a:"Amy Winehouse", o:["Amy Winehouse","Adele","Joss Stone","Lily Allen"]},
+            {q:"¿Quién compuso 'Imagine'?", a:"John Lennon", o:["John Lennon","Paul McCartney","George Harrison","Ringo Starr"]},
+            {q:"¿Qué banda de rock canta 'Paint It, Black'?", a:"The Rolling Stones", o:["The Rolling Stones","The Beatles","The Kinks","The Who"]},
+            {q:"¿Qué banda lanzó 'Enter Sandman'?", a:"Metallica", o:["Metallica","Megadeth","Pantera","Slayer"]},
+            {q:"¿Quién era la cantante de The Cranberries?", a:"Dolores O'Riordan", o:["Dolores O'Riordan","Amy Lee","Shirley Manson","Gwen Stefani"]},
+            {q:"¿Qué banda británica canta 'Wonderwall'?", a:"Oasis", o:["Oasis","Blur","Pulp","Radiohead"]},
+            {q:"¿Qué guitarrista de Pantera fue asesinado en escena?", a:"Dimebag Darrell", o:["Dimebag Darrell","Randy Rhoads","Jeff Hanneman","Zakk Wylde"]},
+            {q:"¿Quién fue el primer cantante de Iron Maiden?", a:"Paul Di'Anno", o:["Paul Di'Anno","Bruce Dickinson","Blaze Bayley","Steve Harris"]},
+            {q:"¿Qué banda alemana canta 'Rock You Like a Hurricane'?", a:"Scorpions", o:["Scorpions","Rammstein","Accept","Helloween"]},
+            {q:"¿Cómo se llama el cantante de System of a Down?", a:"Serj Tankian", o:["Serj Tankian","Daron Malakian","Jonathan Davis","Corey Taylor"]},
+            {q:"¿Qué banda lanzó 'OK Computer'?", a:"Radiohead", o:["Radiohead","Muse","The Strokes","Coldplay"]},
+            {q:"¿Quién es el guitarrista de Rage Against the Machine?", a:"Tom Morello", o:["Tom Morello","Slash","Zakk Wylde","John Frusciante"]},
+            {q:"¿Qué banda de metal canta 'Chop Suey!'?", a:"System of a Down", o:["System of a Down","Korn","Slipknot","Disturbed"]},
+            {q:"¿Voz detrás de 'Rolling in the Deep'?", a:"Adele", o:["Adele","Amy Winehouse","Duffy","Beyoncé"]},
+            {q:"¿Baterista de The Beatles?", a:"Ringo Starr", o:["Ringo Starr","Charlie Watts","John Bonham","Keith Moon"]},
+            {q:"¿Qué banda canta 'Another Brick in the Wall'?", a:"Pink Floyd", o:["Pink Floyd","Led Zeppelin","Queen","The Beatles"]},
+            {q:"¿Quién es el cantante de Aerosmith?", a:"Steven Tyler", o:["Steven Tyler","Joe Perry","Mick Jagger","Jon Bon Jovi"]},
+            {q:"¿Qué banda lanzó 'Hotel California'?", a:"Eagles", o:["Eagles","Fleetwood Mac","The Doors","Lynyrd Skynyrd"]},
+            {q:"¿A qué banda pertenecía Lemmy antes de Motörhead?", a:"Hawkwind", o:["Hawkwind","Black Sabbath","The Rockin' Vickers","The Damned"]},
+            {q:"¿Quién canta 'Hells Bells'?", a:"AC/DC", o:["AC/DC","Iron Maiden","Black Sabbath","Slayer"]},
+            {q:"¿Qué banda de rock canta 'Light My Fire'?", a:"The Doors", o:["The Doors","The Beatles","The Kinks","The Animals"]},
+            {q:"¿En qué año se separaron The Beatles?", a:"1970", o:["1970","1969","1971","1972"]},
+            {q:"¿Guitarrista que tocó el himno en Woodstock 69?", a:"Jimi Hendrix", o:["Jimi Hendrix","Carlos Santana","Eric Clapton","Jimmy Page"]},
+            {q:"¿Quién canta 'Single Ladies'?", a:"Beyoncé", o:["Beyoncé","Rihanna","Kelly Roland","Alicia Keys"]},
+            {q:"¿Banda de los 80 que canta 'Take on Me'?", a:"A-ha", o:["A-ha","Duran Duran","Depeche Mode","Erasure"]},
+            {q:"¿Quién es 'The Weeknd'?", a:"Abel Tesfaye", o:["Abel Tesfaye","Bruno Mars","Drake","Post Malone"]},
+            {q:"¿Qué banda de Grunge lanzó 'Superunknown'?", a:"Soundgarden", o:["Soundgarden","Nirvana","Pearl Jam","Alice in Chains"]},
+            {q:"¿Bajista de Red Hot Chili Peppers?", a:"Flea", o:["Flea","Les Claypool","Geddy Lee","John Myung"]},
+            {q:"¿Banda de metal de 'Symphony of Destruction'?", a:"Megadeth", o:["Megadeth","Metallica","Anthrax","Slayer"]},
+            {q:"¿Cantante original de Alice in Chains?", a:"Layne Staley", o:["Layne Staley","Jerry Cantrell","Chris Cornell","Eddie Vedder"]},
+            {q:"¿Guitarrista famoso por el solo 'Eruption'?", a:"Eddie Van Halen", o:["Eddie Van Halen","Slash","Steve Vai","Joe Satriani"]},
+            {q:"¿Quién canta 'Like a Virgin'?", a:"Madonna", o:["Madonna","Whitney Houston","Janet Jackson","Cher"]},
+            {q:"¿Quién lanzó 'Appetite for Destruction'?", a:"Guns N' Roses", o:["Guns N' Roses","Mötley Crüe","Poison","Skid Row"]},
+            {q:"¿Guitarrista de Pink Floyd tras Syd Barrett?", a:"David Gilmour", o:["David Gilmour","Roger Waters","Nick Mason","Richard Wright"]},
+            {q:"¿Banda de metal de 'Ace of Spades'?", a:"Motörhead", o:["Motörhead","Black Sabbath","Venom","Saxon"]},
+            {q:"¿Quién es el cantante de Depeche Mode?", a:"Dave Gahan", o:["Dave Gahan","Martin Gore","Andy Fletcher","Vince Clarke"]},
+            {q:"¿Banda que canta 'Personal Jesus'?", a:"Depeche Mode", o:["Depeche Mode","The Cure","New Order","Pet Shop Boys"]},
+            {q:"¿Quién es el cantante de Pearl Jam?", a:"Eddie Vedder", o:["Eddie Vedder","Kurt Cobain","Chris Cornell","Layne Staley"]},
+            {q:"¿Banda de metal de 'Before I Forget'?", a:"Slipknot", o:["Slipknot","Korn","Limp Bizkit","Deftones"]},
+            {q:"¿Cantante de Maiden en 'The Number of the Beast'?", a:"Bruce Dickinson", o:["Bruce Dickinson","Paul Di'Anno","Blaze Bayley","Steve Harris"]},
+            {q:"¿Banda que lanzó 'Stairway to Heaven'?", a:"Led Zeppelin", o:["Led Zeppelin","Deep Purple","The Who","Pink Floyd"]},
+            {q:"¿Quién canta 'Billie Jean'?", a:"Michael Jackson", o:["Michael Jackson","Prince","Stevie Wonder","George Michael"]},
+            {q:"¿Banda de rock de 'Sweet Child O' Mine'?", a:"Guns N' Roses", o:["Guns N' Roses","Metallica","AC/DC","Queen"]},
+            {q:"¿Rolling Stones que cayó de un árbol?", a:"Keith Richards", o:["Keith Richards","Mick Jagger","Ronnie Wood","Charlie Watts"]},
+            {q:"¿Banda de metal de 'Fear of the Dark'?", a:"Iron Maiden", o:["Iron Maiden","Judas Priest","Saxon","Helloween"]},
+            {q:"¿Quién canta 'Born to Run'?", a:"Bruce Springsteen", o:["Bruce Springsteen","Bob Dylan","Neil Young","Tom Petty"]},
+            {q:"¿Quién lanzó 'The Dark Side of the Moon'?", a:"Pink Floyd", o:["Pink Floyd","Led Zeppelin","King Crimson","Yes"]},
+            {q:"¿Banda de metal de 'Paranoid'?", a:"Black Sabbath", o:["Black Sabbath","Iron Maiden","Judas Priest","Motörhead"]},
+            {q:"¿Quién es el cantante de The Doors?", a:"Jim Morrison", o:["Jim Morrison","Jimi Hendrix","Janis Joplin","Iggy Pop"]},
+            {q:"¿Rey del Rock and Roll?", a:"Elvis Presley", o:["Elvis Presley","Chuck Berry","Little Richard","Buddy Holly"]},
+            {q:"¿Banda que lanzó 'Nevermind'?", a:"Nirvana", o:["Nirvana","Pearl Jam","Alice in Chains","Soundgarden"]},
+            {q:"¿Banda de metal de 'Toxicity'?", a:"System of a Down", o:["System of a Down","Korn","Slipknot","Mudvayne"]},
+            {q:"¿Quién es el cantante de Green Day?", a:"Billie Joe Armstrong", o:["Billie Joe Armstrong","Mike Dirnt","Tre Cool","Dexter Holland"]},
+            {q:"¿Banda de metal de 'War Pigs'?", a:"Black Sabbath", o:["Black Sabbath","Iron Maiden","Metallica","Slayer"]},
+            {q:"¿Quién es el cantante de Muse?", a:"Matt Bellamy", o:["Matt Bellamy","Thom Yorke","Chris Martin","Brian Molko"]},
+            {q:"¿Banda de metal de 'Peace Sells'?", a:"Megadeth", o:["Megadeth","Metallica","Anthrax","Slayer"]},
+            {q:"¿Banda de metal de 'Freak on a Leash'?", a:"Korn", o:["Korn","Slipknot","Limp Bizkit","Deftones"]},
+            {q:"¿Cantante de Killers?", a:"Brandon Flowers", o:["Brandon Flowers","Alex Turner","Julian Casablancas","Caleb Followill"]},
+            {q:"¿Cantante de Rolling Stones?", a:"Mick Jagger", o:["Chris Cornell","Alex Turner","Robert Plant","Mick Jagger"]},
+            {q:"¿Jimmy Hendrix tocaba...?", a:"Guitarra", o:["Guitarra","Bajo","Saxo","Trompeta"]},
+            {q:"¿De quien es el tema 'satisfaction'?", a:"Rolling Stones", o:["Rolling Stones","ACDC","Pink Floyd","Nirvana"]},
+            {q:"¿De quien es el tema 'HELP'?", a:"The Beatles", o:["The Beatles","ACDC","Pink Floyd","Nirvana"]},
+            {q:"¿De quien es el tema 'Crazy Train'?", a:"Ozzy", o:["Ozzy","Pantera","Pink Floyd","Soundgarden"]},
+            {q:"¿Baterista de The Beatles?", a:"Ringo Starr", o:["Ringo Starr","Mick Jagger","Matt Sorum","Danny Carey"]}
+        ];
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function showModal(title, msg, isGameOver) {
+            const modal = document.getElementById('modal');
+            const btn = document.getElementById('mBtn');
+            const premioArea = document.getElementById('premio-area');
+            
+            document.getElementById('mTitle').innerText = title;
+            document.getElementById('mMsg').innerText = msg;
+            premioArea.innerHTML = "";
+            modal.style.display = 'flex';
+            
+            if(isGameOver) {
+                let premio = "";
+                if(score <= 700) premio = "NOVATO";
+                else if(score <= 1500) premio = "2x1 CERVEZA";
+                else if(score <= 2300) premio = "2x1 FERNET";
+                else premio = "VASO DE FERNET";
+
+                premioArea.innerHTML = `<span style="font-size:0.6rem">RANK:</span><br><span id="premio-tag">${premio}</span>`;
+                btn.innerText = "TRY AGAIN";
+                btn.onclick = function() { location.reload(); };
+            } else {
+                btn.innerText = "CONTINUE";
+                btn.onclick = function() { modal.style.display = 'none'; next(); };
+            }
+        }
+
+        function start(){
+            score = 0; vidas = 2;
+            mazo = shuffle([...banco]);
+            document.getElementById('p1').className = 'p';
+            document.getElementById('p2').className = 'p v';
+            next();
+        }
+
+        function next(){
+            if(mazo.length == 0) mazo = shuffle([...banco]);
+            if(vidas <= 0) return;
+
+            var c = mazo.pop();
+            document.getElementById('txt').innerText = c.q;
+            document.getElementById('s').innerText = score.toString().padStart(4, '0');
+            document.getElementById('l').innerText = "I ".repeat(vidas);
+            var oBox = document.getElementById('opts'); 
+            oBox.innerHTML = "";
+            
+            shuffle([...c.o]).forEach(function(op){
+                var b = document.createElement('div'); 
+                b.className = "btn opt-btn"; 
+                b.innerText = op;
+                b.onclick = function(){
+                    if(op === c.a) { 
+                        score += 100;
+                        next(); 
+                    } else { 
+                        vidas--; 
+                        document.body.classList.add('shake');
+                        setTimeout(()=> document.body.classList.remove('shake'), 200);
+                        
+                        if(vidas <= 0) {
+                            showModal("GAME OVER", "FINAL SCORE: " + score, true);
+                        } else {
+                            showModal("MISSED!", "CORRECT ANSWER:\n" + c.a, false);
+                        }
+                    }
+                }; 
+                oBox.appendChild(b);
+            });
+        }
+    </script>
+</body>
+</html>
