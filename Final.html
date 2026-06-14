@@ -236,9 +236,9 @@
             if(isGameOver) {
                 let premio = "";
                 if(score <= 700) premio = "NOVATO";
-                else if(score <= 1500) premio = "2x1 CERVEZA";
-                else if(score <= 2300) premio = "2x1 FERNET";
-                else premio = "VASO DE FERNET";
+                else if(score <= 1500) premio = "30 % EN LA BARRA";
+                else if(score <= 2300) premio = "50 % EN LA BARRA";
+                else premio = "VASO DE VERMOUT";
 
                 premioArea.innerHTML = `<span style="font-size:0.5rem">RANK:</span><br><span id="premio-tag">${premio}</span>`;
                 btn.innerText = "TRY AGAIN";
